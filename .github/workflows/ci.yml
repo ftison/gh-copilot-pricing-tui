@@ -108,7 +108,7 @@ jobs:
         with:
           name: gh-llm-cost-table-${{ matrix.os }}
           path: |
-            target/release/gh_llm_cost_table
-            target/release/gh_llm_cost_table.exe
+            target/release/gh_copilot_pricing_tui
+            target/release/gh_copilot_pricing_tui.exe
           if-no-files-found: ignore
           retention-days: 5

@@ -1,5 +1,5 @@
 [package]
-name = "gh_llm_cost_table"
+name = "gh_copilot_pricing_tui"
 version = "0.1.0"
 edition = "2024"
 description = "A command console tool parsing GitHub documentation to display LLM pricing."

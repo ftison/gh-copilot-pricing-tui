@@ -67,9 +67,9 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ matrix.target }}" == *"windows"* ]]; then
-            echo "name=gh_llm_cost_table.exe" >> "$GITHUB_OUTPUT"
+            echo "name=gh_copilot_pricing_tui.exe" >> "$GITHUB_OUTPUT"
           else
-            echo "name=gh_llm_cost_table" >> "$GITHUB_OUTPUT"
+            echo "name=gh_copilot_pricing_tui" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Package binary (Unix)

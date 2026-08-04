@@ -2,9 +2,9 @@ use std::process;
 
 use tracing::{debug, error, info};
 
-use gh_llm_cost_table::app::run_tui;
-use gh_llm_cost_table::data::fetch::fetch_documentation;
-use gh_llm_cost_table::data::parse::parse_documentation;
+use gh_copilot_pricing_tui::app::run_tui;
+use gh_copilot_pricing_tui::data::fetch::fetch_documentation;
+use gh_copilot_pricing_tui::data::parse::parse_documentation;
 
 #[tokio::main]
 async fn main() {
