@@ -4,6 +4,30 @@ A terminal UI tool that fetches [GitHub Copilot model pricing](https://docs.gith
 
 `gh_llm_cost_table --help` for help (currently the binary has no CLI flags).
 
+## Install
+
+Prebuilt binaries are available on the [Releases](https://github.com/ftison/github-llm-cost-table/releases) page.
+
+### macOS (Apple Silicon)
+
+```sh
+curl -sL https://github.com/ftison/github-llm-cost-table/releases/latest/download/gh-llm-cost-table-v<VERSION>-aarch64-apple-darwin.tar.gz | tar xz
+mv gh-llm-cost-table/gh_llm_cost_table ~/.local/bin/
+```
+
+### Linux (x86_64)
+
+```sh
+curl -sL https://github.com/ftison/github-llm-cost-table/releases/latest/download/gh-llm-cost-table-v<VERSION>-x86_64-unknown-linux-musl.tar.gz | tar xz
+mv gh-llm-cost-table/gh_llm_cost_table ~/.local/bin/
+```
+
+### Windows (x86_64)
+
+Download `gh-llm-cost-table-v<VERSION>-x86_64-pc-windows-msvc.zip`, extract it and run `gh_llm_cost_table.exe`.
+
+Replace `<VERSION>` with the desired release tag (e.g. `v0.1.0`).
+
 ## Features
 
 - Fetches the latest pricing table directly from GitHub Docs on every run.
