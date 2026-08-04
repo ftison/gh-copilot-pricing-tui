@@ -1,0 +1,23 @@
+[package]
+name = "gh_llm_cost_table"
+version = "0.1.0"
+edition = "2024"
+description = "A command console tool parsing GitHub documentation to display LLM pricing."
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+anyhow = "1.0"
+crossterm = "0.28"
+pulldown-cmark = "0.13"
+ratatui = "0.30"
+reqwest = { version = "0.12", features = ["rustls-tls"] }
+thiserror = "2.0"
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
