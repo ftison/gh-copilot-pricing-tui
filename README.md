@@ -5,26 +5,26 @@ A terminal UI tool that fetches [GitHub Copilot model pricing](https://docs.gith
 
 ## Install
 
-Prebuilt binaries are available on the [Releases](https://github.com/ftison/github-llm-cost-table/releases) page.
+Prebuilt binaries are available on the [Releases](https://github.com/ftison/gh-copilot-pricing-tui/releases) page.
 
 ### macOS (Apple Silicon)
 
 ```sh
-curl -sL https://github.com/ftison/github-llm-cost-table/releases/latest/download/gh-llm-cost-table-v<VERSION>-aarch64-apple-darwin.tar.gz | tar xz
-mv gh-llm-cost-table/gh_copilot_pricing_tui ~/.local/bin/
+curl -sL https://github.com/ftison/gh-copilot-pricing-tui/releases/latest/download/gh-copilot-pricing-tui-v<VERSION>-aarch64-apple-darwin.tar.gz | tar xz
+mv gh-copilot-pricing-tui-v<VERSION>-aarch64-apple-darwin/gh_copilot_pricing_tui ~/.local/bin/
 xattr -d com.apple.quarantine ~/.local/bin/gh_copilot_pricing_tui
 ```
 
 ### Linux (x86_64)
 
 ```sh
-curl -sL https://github.com/ftison/github-llm-cost-table/releases/latest/download/gh-llm-cost-table-v<VERSION>-x86_64-unknown-linux-musl.tar.gz | tar xz
-mv gh-llm-cost-table/gh_copilot_pricing_tui ~/.local/bin/
+curl -sL https://github.com/ftison/gh-copilot-pricing-tui/releases/latest/download/gh-copilot-pricing-tui-v<VERSION>-x86_64-unknown-linux-musl.tar.gz | tar xz
+mv gh-copilot-pricing-tui-v<VERSION>-x86_64-unknown-linux-musl/gh_copilot_pricing_tui ~/.local/bin/
 ```
 
 ### Windows (x86_64)
 
-Download `gh-llm-cost-table-v<VERSION>-x86_64-pc-windows-msvc.zip`, extract it and run `gh_copilot_pricing_tui.exe`.
+Download `gh-copilot-pricing-tui-v<VERSION>-x86_64-pc-windows-msvc.zip`, extract it and run `gh_copilot_pricing_tui.exe`.
 
 Replace `<VERSION>` with the desired release tag (e.g. `v0.1.0`).
 

@@ -62,22 +62,22 @@ jobs:
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }} --verbose
 
-      - name: Set binary name
+      - name: Resolve binary name
         id: binary
         shell: bash
         run: |
+          BIN_NAME=$(cargo metadata --no-deps --format-version 1 | ruby -rjson -e 'puts JSON.parse(STDIN.read)["packages"].first["targets"].find { |t| t["kind"].include?("bin") }["name"]')
           if [[ "${{ matrix.target }}" == *"windows"* ]]; then
-            echo "name=gh_copilot_pricing_tui.exe" >> "$GITHUB_OUTPUT"
-          else
-            echo "name=gh_copilot_pricing_tui" >> "$GITHUB_OUTPUT"
+            BIN_NAME="${BIN_NAME}.exe"
           fi
+          echo "name=${BIN_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Package binary (Unix)
         if: matrix.archive == 'tar.gz'
         shell: bash
         run: |
           VERSION=${GITHUB_REF_NAME:-${{ inputs.tag }}}
-          ASSET_NAME="gh-llm-cost-table-${VERSION}-${{ matrix.target }}"
+          ASSET_NAME="gh-copilot-pricing-tui-${VERSION}-${{ matrix.target }}"
           mkdir -p "dist/${ASSET_NAME}"
           cp "target/${{ matrix.target }}/release/${{ steps.binary.outputs.name }}" "dist/${ASSET_NAME}/"
           cp README.md LICENSE "dist/${ASSET_NAME}/"
@@ -90,11 +90,13 @@ jobs:
         shell: pwsh
         run: |
           $Version = if ($env:GITHUB_REF_NAME) { $env:GITHUB_REF_NAME } else { "${{ inputs.tag }}" }
-          $AssetName = "gh-llm-cost-table-$Version-${{ matrix.target }}"
-          New-Item -ItemType Directory -Force -Path "dist\$AssetName" | Out-Null
-          Copy-Item "target\${{ matrix.target }}\release\${{ steps.binary.outputs.name }}" "dist\$AssetName\"
-          Copy-Item README.md LICENSE "dist\$AssetName\"
-          Compress-Archive -Path "dist\$AssetName" -DestinationPath "dist\$AssetName.zip" -Force
+          $AssetName = "gh-copilot-pricing-tui-$Version-${{ matrix.target }}"
+          $OutDir = "dist\$AssetName"
+          New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+          Copy-Item "target\${{ matrix.target }}\release\${{ steps.binary.outputs.name }}" -Destination $OutDir
+          Copy-Item README.md -Destination $OutDir
+          Copy-Item LICENSE -Destination $OutDir
+          Compress-Archive -Path $OutDir -DestinationPath "dist\$AssetName.zip" -Force
           "asset=$AssetName.zip" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Upload packaged artifact
