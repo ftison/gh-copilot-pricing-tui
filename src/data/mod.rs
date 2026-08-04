@@ -198,15 +198,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn price_parses_dollar_amount() {
-        let price = Price::parse("$1.75").unwrap();
-        assert!((price.as_f64().unwrap() - 1.75).abs() < f64::EPSILON);
+    fn price_parses_dollar_amount() -> Result<(), GhLlmCostError> {
+        let price = Price::parse("$1.75")?;
+        assert!((price.as_f64().unwrap_or(f64::NAN) - 1.75).abs() < f64::EPSILON);
+        Ok(())
     }
 
     #[test]
-    fn price_parses_not_applicable() {
-        let price = Price::parse("Not applicable").unwrap();
+    fn price_parses_not_applicable() -> Result<(), GhLlmCostError> {
+        let price = Price::parse("Not applicable")?;
         assert!(price.as_f64().is_none());
+        Ok(())
     }
 
     #[test]
@@ -216,20 +218,19 @@ mod tests {
     }
 
     #[test]
-    fn tier_parsing() {
-        assert_eq!(Tier::try_from("Default").unwrap(), Tier::Default);
-        assert_eq!(Tier::try_from("Long context").unwrap(), Tier::LongContext);
-        assert_eq!(
-            Tier::try_from("Not applicable").unwrap(),
-            Tier::NotApplicable
-        );
+    fn tier_parsing() -> Result<(), GhLlmCostError> {
+        assert_eq!(Tier::try_from("Default")?, Tier::Default);
+        assert_eq!(Tier::try_from("Long context")?, Tier::LongContext);
+        assert_eq!(Tier::try_from("Not applicable")?, Tier::NotApplicable);
+        Ok(())
     }
 
     #[test]
-    fn release_status_parsing() {
+    fn release_status_parsing() -> Result<(), GhLlmCostError> {
         assert_eq!(
-            ReleaseStatus::try_from("Public preview").unwrap(),
+            ReleaseStatus::try_from("Public preview")?,
             ReleaseStatus::PublicPreview
         );
+        Ok(())
     }
 }

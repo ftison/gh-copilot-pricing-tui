@@ -180,24 +180,24 @@ mod tests {
     use super::*;
     use crate::data::{Price, ReleaseStatus, Tier};
 
-    fn sample_entry() -> LlmCostEntry {
-        LlmCostEntry {
+    fn sample_entry() -> Result<LlmCostEntry, crate::error::GhLlmCostError> {
+        Ok(LlmCostEntry {
             provider: "OpenAI".to_owned(),
             model: "GPT-5 mini".to_owned(),
             release_status: ReleaseStatus::Ga,
             category: "Lightweight".to_owned(),
             tier: Tier::Default,
             threshold: "Not applicable".to_owned(),
-            input: Price::parse("$0.25").unwrap(),
-            cached_input: Price::parse("$0.025").unwrap(),
-            cache_write: Price::parse("Not applicable").unwrap(),
-            output: Price::parse("$2.00").unwrap(),
-        }
+            input: Price::parse("$0.25")?,
+            cached_input: Price::parse("$0.025")?,
+            cache_write: Price::parse("Not applicable")?,
+            output: Price::parse("$2.00")?,
+        })
     }
 
     #[test]
-    fn app_state_navigation() {
-        let entries = vec![sample_entry(); 5];
+    fn app_state_navigation() -> Result<(), crate::error::GhLlmCostError> {
+        let entries = vec![sample_entry()?; 5];
         let mut state = AppState::new(entries);
 
         assert_eq!(state.selected(), 0);
@@ -209,11 +209,13 @@ mod tests {
         assert_eq!(state.selected(), 4);
         state.next();
         assert_eq!(state.selected(), 4);
+        Ok(())
     }
 
     #[test]
-    fn headers_match_row_length() {
-        let entry = sample_entry();
+    fn headers_match_row_length() -> Result<(), crate::error::GhLlmCostError> {
+        let entry = sample_entry()?;
         assert_eq!(LlmCostEntry::headers().len(), entry.row().len());
+        Ok(())
     }
 }

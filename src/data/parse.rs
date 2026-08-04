@@ -212,27 +212,28 @@ mod tests {
 "#;
 
     #[test]
-    fn parse_sample_documentation() {
-        let data = parse_documentation(SAMPLE).unwrap();
+    fn parse_sample_documentation() -> Result<(), GhLlmCostError> {
+        let data = parse_documentation(SAMPLE)?;
         assert_eq!(data.len(), 2);
 
         let openai = data
             .entries
             .iter()
             .find(|e| e.provider == "OpenAI")
-            .unwrap();
+            .ok_or_else(|| GhLlmCostError::Parse("OpenAI entry not found".to_owned()))?;
         assert_eq!(openai.model, "GPT-5 mini");
         assert_eq!(openai.tier, Tier::Default);
-        assert!((openai.input.as_f64().unwrap() - 0.25).abs() < f64::EPSILON);
+        assert!((openai.input.as_f64().unwrap_or(f64::NAN) - 0.25).abs() < f64::EPSILON);
         assert!(openai.cache_write.as_f64().is_none());
 
         let moonshot = data
             .entries
             .iter()
             .find(|e| e.provider == "Moonshot AI")
-            .unwrap();
+            .ok_or_else(|| GhLlmCostError::Parse("Moonshot AI entry not found".to_owned()))?;
         assert_eq!(moonshot.model, "Kimi K2.7 Code");
         assert_eq!(moonshot.tier, Tier::NotApplicable);
+        Ok(())
     }
 
     #[test]

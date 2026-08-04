@@ -62,7 +62,7 @@ impl AppState {
 mod tests {
     use super::*;
 
-    fn dummy_entries(count: usize) -> Vec<LlmCostEntry> {
+    fn dummy_entries(count: usize) -> Result<Vec<LlmCostEntry>, crate::error::GhLlmCostError> {
         let base = LlmCostEntry {
             provider: "Test".to_owned(),
             model: "Model".to_owned(),
@@ -70,12 +70,12 @@ mod tests {
             category: "Cat".to_owned(),
             tier: crate::data::Tier::Default,
             threshold: "N/A".to_owned(),
-            input: crate::data::Price::parse("$1.00").unwrap(),
-            cached_input: crate::data::Price::parse("$0.10").unwrap(),
-            cache_write: crate::data::Price::parse("Not applicable").unwrap(),
-            output: crate::data::Price::parse("$2.00").unwrap(),
+            input: crate::data::Price::parse("$1.00")?,
+            cached_input: crate::data::Price::parse("$0.10")?,
+            cache_write: crate::data::Price::parse("Not applicable")?,
+            output: crate::data::Price::parse("$2.00")?,
         };
-        vec![base; count]
+        Ok(vec![base; count])
     }
 
     #[test]
@@ -85,8 +85,8 @@ mod tests {
     }
 
     #[test]
-    fn navigation_bounds() {
-        let mut state = AppState::new(dummy_entries(3));
+    fn navigation_bounds() -> Result<(), crate::error::GhLlmCostError> {
+        let mut state = AppState::new(dummy_entries(3)?);
         assert_eq!(state.selected(), 0);
         state.previous();
         assert_eq!(state.selected(), 0);
@@ -94,5 +94,6 @@ mod tests {
         assert_eq!(state.selected(), 2);
         state.next();
         assert_eq!(state.selected(), 2);
+        Ok(())
     }
 }
