@@ -13,6 +13,7 @@ Prebuilt binaries are available on the [Releases](https://github.com/ftison/gith
 ```sh
 curl -sL https://github.com/ftison/github-llm-cost-table/releases/latest/download/gh-llm-cost-table-v<VERSION>-aarch64-apple-darwin.tar.gz | tar xz
 mv gh-llm-cost-table/gh_llm_cost_table ~/.local/bin/
+xattr -d com.apple.quarantine ~/.local/bin/gh_llm_cost_table
 ```
 
 ### Linux (x86_64)
