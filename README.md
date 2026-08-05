@@ -33,7 +33,7 @@ Replace `<VERSION>` with the desired release tag (e.g. `v0.1.0`).
 - Fetches the latest pricing table directly from GitHub Docs on every run.
 - Parses multiple provider tables (OpenAI, Anthropic, Google, Microsoft, xAI, Moonshot AI, …).
 - Interactive `ratatui` table with keyboard navigation.
-- Strict Rust quality gates: clippy, rustfmt, no `unwrap`/`expect` in library code.
+- Copy/Paste friendly to keep the table in your favorite editor.
 
 ## Build
 
@@ -51,12 +51,13 @@ cargo run --release
 
 ## Controls
 
-| Key | Action |
-| --- | --- |
-| `↑` / `↓` or `k` / `j` | Move selection up/down |
-| `PgUp` / `PgDown` | Page up/down |
-| `Home` / `End` | Go to top/bottom |
-| `q` or `Esc` | Quit |
+| Key | Action                  |
+| --- |-------------------------|
+| `↑` / `↓` or `k` / `j` | Move selection up/down  |
+| `PgUp` / `PgDown` | Page up/down            |
+| `Home` / `End` | Go to top/bottom        |
+| `c` | Copy table to clipboard |
+| `q` or `Esc` | Quit                    |
 
 ## Development
 
