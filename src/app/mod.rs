@@ -9,6 +9,7 @@ use ratatui::{Frame, Terminal};
 
 use crate::data::LlmCostEntry;
 use crate::error::GhLlmCostError;
+use crate::ui::{build_table_tsv, copy_to_clipboard};
 
 pub mod state;
 
@@ -104,6 +105,17 @@ async fn run_loop<B: Backend>(
                     state.go_to_bottom();
                     redraw = true;
                 }
+                KeyCode::Char('c') => {
+                    let tsv = build_table_tsv(state.entries());
+                    match copy_to_clipboard(&tsv) {
+                        Ok(()) => state.set_status(format!(
+                            "Copied {} rows to clipboard",
+                            state.entries().len()
+                        )),
+                        Err(e) => state.set_status(format!("Failed to copy: {e}")),
+                    }
+                    redraw = true;
+                }
                 _ => {}
             }
         }
@@ -169,9 +181,16 @@ fn draw(frame: &mut Frame, state: &mut AppState) {
     table_state.select(Some(state.selected()));
     frame.render_stateful_widget(table, chunks[0], &mut table_state);
 
+    let help_text = if let Some(status) = state.take_status() {
+        format!(
+            "{status} | q/Esc: quit | ↑/k ↓/j: move | PgUp/PgDown: page | Home/End: top/bottom | c: copy"
+        )
+    } else {
+        "q/Esc: quit | ↑/k ↓/j: move | PgUp/PgDown: page | Home/End: top/bottom | c: copy"
+            .to_owned()
+    };
     let help =
-        Paragraph::new("q/Esc: quit | ↑/k ↓/j: move | PgUp/PgDown: page | Home/End: top/bottom")
-            .block(Block::default().borders(Borders::ALL).title(" Help "));
+        Paragraph::new(help_text).block(Block::default().borders(Borders::ALL).title(" Help "));
     frame.render_widget(help, chunks[1]);
 }
 

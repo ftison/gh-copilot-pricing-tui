@@ -3,6 +3,7 @@ use crate::data::LlmCostEntry;
 pub struct AppState {
     entries: Vec<LlmCostEntry>,
     selected: usize,
+    last_status: Option<String>,
 }
 
 impl AppState {
@@ -11,6 +12,7 @@ impl AppState {
         Self {
             entries,
             selected: 0,
+            last_status: None,
         }
     }
 
@@ -56,6 +58,23 @@ impl AppState {
             self.selected = self.entries.len() - 1;
         }
     }
+
+    /// Returns the full list of entries in order.
+    #[must_use]
+    pub fn entries(&self) -> &[LlmCostEntry] {
+        &self.entries
+    }
+
+    /// Returns the last status message and clears it.
+    #[must_use]
+    pub fn take_status(&mut self) -> Option<String> {
+        self.last_status.take()
+    }
+
+    /// Sets a status message to display to the user.
+    pub fn set_status(&mut self, message: impl Into<String>) {
+        self.last_status = Some(message.into());
+    }
 }
 
 #[cfg(test)]
@@ -94,6 +113,16 @@ mod tests {
         assert_eq!(state.selected(), 2);
         state.next();
         assert_eq!(state.selected(), 2);
+        Ok(())
+    }
+
+    #[test]
+    fn status_round_trip() -> Result<(), crate::error::GhLlmCostError> {
+        let mut state = AppState::new(dummy_entries(1)?);
+        assert!(state.take_status().is_none());
+        state.set_status("Copied!");
+        assert_eq!(state.take_status().as_deref(), Some("Copied!"));
+        assert!(state.take_status().is_none());
         Ok(())
     }
 }
