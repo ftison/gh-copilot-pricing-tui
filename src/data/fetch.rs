@@ -1,7 +1,7 @@
 use crate::error::GhLlmCostError;
 
 const URL: &str =
-    "https://docs.github.com/fr/copilot/reference/copilot-billing/models-and-pricing.md";
+    "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing.md";
 
 /// Fetches the GitHub Copilot pricing documentation as Markdown.
 ///

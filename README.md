@@ -1,6 +1,6 @@
 # gh-copilot-pricing-tui : GitHub Copilot model pricing table
 
-A terminal UI tool that fetches [GitHub Copilot model pricing](https://docs.github.com/fr/copilot/reference/copilot-billing/models-and-pricing) and displays it as an interactive table.
+A terminal UI tool that fetches [GitHub Copilot model pricing](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing) and displays it as an interactive table.
 ![Screenshot](./img/screenshot.webp)
 
 ## Install
