@@ -14,6 +14,12 @@ pub enum GhLlmCostError {
     #[error("Failed to parse pricing table: {0}")]
     Parse(String),
 
+    #[error("Invalid decimal separator '{0}': only '.' and ',' are supported")]
+    InvalidDecimalSeparator(String),
+
+    #[error("Command-line argument error: {0}")]
+    Cli(String),
+
     #[error("No pricing data found in the fetched documentation")]
     NoData,
 }

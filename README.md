@@ -49,6 +49,19 @@ cargo build --release
 cargo run --release
 ```
 
+### Options
+
+| Option | Description |
+| --- | --- |
+| `-d, --decimal-separator <CHAR>` | Decimal separator for prices (`.` or `,`, default: `.`) |
+| `-h, --help` | Print help information |
+| `-V, --version` | Print version |
+
+Example:
+```sh
+cargo run --release -- -d ,
+```
+
 ## Controls
 
 | Key | Action                  |

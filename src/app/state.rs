@@ -1,19 +1,26 @@
-use crate::data::LlmCostEntry;
+use crate::data::{DecimalSeparator, LlmCostEntry};
 
 pub struct AppState {
     entries: Vec<LlmCostEntry>,
     selected: usize,
     last_status: Option<String>,
+    decimal_separator: DecimalSeparator,
 }
 
 impl AppState {
     #[must_use]
-    pub fn new(entries: Vec<LlmCostEntry>) -> Self {
+    pub fn new(entries: Vec<LlmCostEntry>, decimal_separator: DecimalSeparator) -> Self {
         Self {
             entries,
             selected: 0,
             last_status: None,
+            decimal_separator,
         }
+    }
+
+    #[must_use]
+    pub fn decimal_separator(&self) -> DecimalSeparator {
+        self.decimal_separator
     }
 
     #[must_use]
@@ -99,13 +106,13 @@ mod tests {
 
     #[test]
     fn empty_state_stays_at_zero() {
-        let state = AppState::new(vec![]);
+        let state = AppState::new(vec![], DecimalSeparator::Dot);
         assert_eq!(state.selected(), 0);
     }
 
     #[test]
     fn navigation_bounds() -> Result<(), crate::error::GhLlmCostError> {
-        let mut state = AppState::new(dummy_entries(3)?);
+        let mut state = AppState::new(dummy_entries(3)?, DecimalSeparator::Dot);
         assert_eq!(state.selected(), 0);
         state.previous();
         assert_eq!(state.selected(), 0);
@@ -118,7 +125,7 @@ mod tests {
 
     #[test]
     fn status_round_trip() -> Result<(), crate::error::GhLlmCostError> {
-        let mut state = AppState::new(dummy_entries(1)?);
+        let mut state = AppState::new(dummy_entries(1)?, DecimalSeparator::Dot);
         assert!(state.take_status().is_none());
         state.set_status("Copied!");
         assert_eq!(state.take_status().as_deref(), Some("Copied!"));

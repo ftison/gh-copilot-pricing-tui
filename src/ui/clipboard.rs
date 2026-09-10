@@ -1,4 +1,4 @@
-use crate::data::LlmCostEntry;
+use crate::data::{DecimalSeparator, LlmCostEntry};
 
 /// Builds a TSV (tab-separated values) representation of the full pricing table,
 /// including headers and one row per entry.
@@ -6,7 +6,7 @@ use crate::data::LlmCostEntry;
 /// Price columns come through as plain numeric strings without a `$` symbol so
 /// that spreadsheets can treat them as numbers.
 #[must_use]
-pub fn build_tsv(entries: &[LlmCostEntry]) -> String {
+pub fn build_tsv(entries: &[LlmCostEntry], separator: DecimalSeparator) -> String {
     let mut lines: Vec<String> = Vec::with_capacity(entries.len() + 1);
 
     lines.push(
@@ -20,7 +20,7 @@ pub fn build_tsv(entries: &[LlmCostEntry]) -> String {
     for entry in entries {
         lines.push(
             entry
-                .row()
+                .row_with(separator)
                 .into_iter()
                 .map(strip_dollar)
                 .map(cleanup_cell)
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn tsv_includes_headers_and_rows() -> Result<(), crate::error::GhLlmCostError> {
         let entries = vec![sample_entry()?];
-        let tsv = build_tsv(&entries);
+        let tsv = build_tsv(&entries, DecimalSeparator::Dot);
 
         let lines: Vec<&str> = tsv.lines().collect();
         assert_eq!(lines.len(), 2);
@@ -93,7 +93,7 @@ mod tests {
         entry.provider = "Open\tAI".to_owned();
         entry.model = "GPT\n5".to_owned();
 
-        let tsv = build_tsv(&[entry]);
+        let tsv = build_tsv(&[entry], DecimalSeparator::Dot);
         let row = tsv.lines().nth(1).unwrap_or_default();
         let cells: Vec<&str> = row.split('\t').collect();
 
@@ -105,7 +105,7 @@ mod tests {
     #[test]
     fn tsv_strips_dollar_prefix() -> Result<(), crate::error::GhLlmCostError> {
         let entries = vec![sample_entry()?];
-        let tsv = build_tsv(&entries);
+        let tsv = build_tsv(&entries, DecimalSeparator::Dot);
         let row = tsv.lines().nth(1).unwrap_or_default();
         let cells: Vec<&str> = row.split('\t').collect();
 
@@ -113,6 +113,20 @@ mod tests {
         assert_eq!(cells[7], "0.03");
         assert_eq!(cells[8], "N/A");
         assert_eq!(cells[9], "2.00");
+        Ok(())
+    }
+
+    #[test]
+    fn tsv_with_comma_separator() -> Result<(), crate::error::GhLlmCostError> {
+        let entries = vec![sample_entry()?];
+        let tsv = build_tsv(&entries, DecimalSeparator::Comma);
+        let row = tsv.lines().nth(1).unwrap_or_default();
+        let cells: Vec<&str> = row.split('\t').collect();
+
+        assert_eq!(cells[6], "0,25");
+        assert_eq!(cells[7], "0,03");
+        assert_eq!(cells[8], "N/A");
+        assert_eq!(cells[9], "2,00");
         Ok(())
     }
 }

@@ -69,6 +69,48 @@ impl TryFrom<&str> for ReleaseStatus {
     }
 }
 
+/// Decimal separator used for displaying numeric values in the pricing table.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
+pub enum DecimalSeparator {
+    #[default]
+    Dot,
+    Comma,
+}
+
+impl DecimalSeparator {
+    #[must_use]
+    pub const fn as_char(&self) -> char {
+        match self {
+            Self::Dot => '.',
+            Self::Comma => ',',
+        }
+    }
+}
+
+impl TryFrom<char> for DecimalSeparator {
+    type Error = GhLlmCostError;
+
+    fn try_from(c: char) -> Result<Self, Self::Error> {
+        match c {
+            '.' => Ok(Self::Dot),
+            ',' => Ok(Self::Comma),
+            other => Err(GhLlmCostError::InvalidDecimalSeparator(other.to_string())),
+        }
+    }
+}
+
+impl std::str::FromStr for DecimalSeparator {
+    type Err = GhLlmCostError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "." => Ok(Self::Dot),
+            "," => Ok(Self::Comma),
+            other => Err(GhLlmCostError::InvalidDecimalSeparator(other.to_owned())),
+        }
+    }
+}
+
 /// Represents a price in USD per 1 million tokens.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Price(Option<f64>);
@@ -111,9 +153,20 @@ impl Price {
 
     #[must_use]
     pub fn display(&self) -> String {
+        self.display_with(DecimalSeparator::default())
+    }
+
+    #[must_use]
+    pub fn display_with(&self, separator: DecimalSeparator) -> String {
         match self.0 {
             None => "N/A".to_owned(),
-            Some(v) => format!("${v:.2}"),
+            Some(v) => {
+                let formatted = format!("{v:.2}");
+                match separator {
+                    DecimalSeparator::Dot => format!("${formatted}"),
+                    DecimalSeparator::Comma => format!("${}", formatted.replace('.', ",")),
+                }
+            }
         }
     }
 }
@@ -151,6 +204,11 @@ impl LlmCostEntry {
 
     #[must_use]
     pub fn row(&self) -> Vec<String> {
+        self.row_with(DecimalSeparator::default())
+    }
+
+    #[must_use]
+    pub fn row_with(&self, separator: DecimalSeparator) -> Vec<String> {
         vec![
             self.provider.clone(),
             self.model.clone(),
@@ -158,10 +216,10 @@ impl LlmCostEntry {
             self.category.clone(),
             self.tier.as_str().to_owned(),
             self.threshold.clone(),
-            self.input.display(),
-            self.cached_input.display(),
-            self.cache_write.display(),
-            self.output.display(),
+            self.input.display_with(separator),
+            self.cached_input.display_with(separator),
+            self.cache_write.display_with(separator),
+            self.output.display_with(separator),
         ]
     }
 }
@@ -231,6 +289,29 @@ mod tests {
             ReleaseStatus::try_from("Public preview")?,
             ReleaseStatus::PublicPreview
         );
+        Ok(())
+    }
+
+    #[test]
+    fn decimal_separator_parsing() -> Result<(), GhLlmCostError> {
+        assert_eq!(DecimalSeparator::try_from('.')?, DecimalSeparator::Dot);
+        assert_eq!(DecimalSeparator::try_from(',')?, DecimalSeparator::Comma);
+        assert!(".".parse::<DecimalSeparator>()? == DecimalSeparator::Dot);
+        assert!(",".parse::<DecimalSeparator>()? == DecimalSeparator::Comma);
+        assert!(DecimalSeparator::try_from('x').is_err());
+        assert!("abc".parse::<DecimalSeparator>().is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn price_display_with_separators() -> Result<(), GhLlmCostError> {
+        let price = Price::parse("$1.75")?;
+        assert_eq!(price.display_with(DecimalSeparator::Dot), "$1.75");
+        assert_eq!(price.display_with(DecimalSeparator::Comma), "$1,75");
+
+        let na = Price::parse("Not applicable")?;
+        assert_eq!(na.display_with(DecimalSeparator::Dot), "N/A");
+        assert_eq!(na.display_with(DecimalSeparator::Comma), "N/A");
         Ok(())
     }
 }

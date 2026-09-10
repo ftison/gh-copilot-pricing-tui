@@ -3,11 +3,28 @@ use std::process;
 use tracing::{debug, error, info};
 
 use gh_copilot_pricing_tui::app::run_tui;
+use gh_copilot_pricing_tui::cli::{CliAction, parse_args};
 use gh_copilot_pricing_tui::data::fetch::fetch_documentation;
 use gh_copilot_pricing_tui::data::parse::parse_documentation;
 
 #[tokio::main]
 async fn main() {
+    let cli_config = match parse_args(std::env::args()) {
+        Ok(CliAction::Run(config)) => config,
+        Ok(CliAction::Help(msg)) => {
+            println!("{msg}");
+            process::exit(0);
+        }
+        Ok(CliAction::Version(msg)) => {
+            println!("{msg}");
+            process::exit(0);
+        }
+        Err(e) => {
+            eprintln!("Error: {e}");
+            process::exit(1);
+        }
+    };
+
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -40,7 +57,7 @@ async fn main() {
         }
     };
 
-    if let Err(e) = run_tui(pricing_data.entries).await {
+    if let Err(e) = run_tui(pricing_data.entries, cli_config.decimal_separator).await {
         error!(error = %e, "TUI failed");
         eprintln!("Error: {e}");
         process::exit(1);

@@ -7,7 +7,7 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::widgets::{Block, Borders, Cell, Paragraph, Row, Table, TableState};
 use ratatui::{Frame, Terminal};
 
-use crate::data::LlmCostEntry;
+use crate::data::{DecimalSeparator, LlmCostEntry};
 use crate::error::GhLlmCostError;
 use crate::ui::{build_table_tsv, copy_to_clipboard};
 
@@ -21,9 +21,12 @@ pub use state::AppState;
 ///
 /// Returns an error if the terminal cannot be initialized, restored, or if an
 /// I/O error occurs while reading events.
-pub async fn run_tui(entries: Vec<LlmCostEntry>) -> Result<(), GhLlmCostError> {
+pub async fn run_tui(
+    entries: Vec<LlmCostEntry>,
+    decimal_separator: DecimalSeparator,
+) -> Result<(), GhLlmCostError> {
     let mut terminal = setup_terminal()?;
-    let mut app_state = AppState::new(entries);
+    let mut app_state = AppState::new(entries, decimal_separator);
 
     let result = run_loop(&mut terminal, &mut app_state).await;
 
@@ -106,7 +109,7 @@ async fn run_loop<B: Backend>(
                     redraw = true;
                 }
                 KeyCode::Char('c') => {
-                    let tsv = build_table_tsv(state.entries());
+                    let tsv = build_table_tsv(state.entries(), state.decimal_separator());
                     match copy_to_clipboard(&tsv) {
                         Ok(()) => state.set_status(format!(
                             "Copied {} rows to clipboard",
@@ -148,7 +151,11 @@ fn draw(frame: &mut Frame, state: &mut AppState) {
         .visible_entries()
         .iter()
         .map(|entry| {
-            let cells: Vec<Cell> = entry.row().into_iter().map(Cell::from).collect();
+            let cells: Vec<Cell> = entry
+                .row_with(state.decimal_separator())
+                .into_iter()
+                .map(Cell::from)
+                .collect();
             Row::new(cells).height(1)
         })
         .collect();
@@ -217,7 +224,7 @@ mod tests {
     #[test]
     fn app_state_navigation() -> Result<(), crate::error::GhLlmCostError> {
         let entries = vec![sample_entry()?; 5];
-        let mut state = AppState::new(entries);
+        let mut state = AppState::new(entries, DecimalSeparator::Dot);
 
         assert_eq!(state.selected(), 0);
         state.next();
