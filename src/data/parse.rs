@@ -19,6 +19,7 @@ pub fn parse_documentation(markdown: &str) -> Result<PricingData, GhLlmCostError
     let mut in_table_head = false;
     let mut in_table_row = false;
     let mut in_table_cell = false;
+    let mut in_model_table = false;
 
     let mut header_map: HashMap<String, usize> = HashMap::new();
     let mut current_headers: Vec<String> = Vec::new();
@@ -28,9 +29,16 @@ pub fn parse_documentation(markdown: &str) -> Result<PricingData, GhLlmCostError
     let mut options = Options::empty();
     options.insert(Options::ENABLE_TABLES);
     options.insert(Options::ENABLE_STRIKETHROUGH);
+    options.insert(Options::ENABLE_FOOTNOTES);
 
     for event in Parser::new_ext(markdown, options) {
         match event {
+            Event::Start(Tag::Heading {
+                level: HeadingLevel::H2,
+                ..
+            }) => {
+                current_provider.clear();
+            }
             Event::Start(Tag::Heading {
                 level: HeadingLevel::H3,
                 ..
@@ -46,6 +54,7 @@ pub fn parse_documentation(markdown: &str) -> Result<PricingData, GhLlmCostError
             }
             Event::Start(Tag::Table { .. }) => {
                 _in_table = true;
+                in_model_table = false;
                 header_map.clear();
                 current_headers.clear();
                 current_row.clear();
@@ -53,6 +62,7 @@ pub fn parse_documentation(markdown: &str) -> Result<PricingData, GhLlmCostError
             }
             Event::End(TagEnd::Table) => {
                 _in_table = false;
+                in_model_table = false;
                 header_map.clear();
                 current_headers.clear();
                 current_row.clear();
@@ -67,6 +77,7 @@ pub fn parse_documentation(markdown: &str) -> Result<PricingData, GhLlmCostError
                 for (idx, header) in current_headers.iter().enumerate() {
                     header_map.insert(normalize_header(header), idx);
                 }
+                in_model_table = is_model_table(&header_map);
             }
             Event::Start(Tag::TableRow) => {
                 in_table_row = true;
@@ -75,7 +86,8 @@ pub fn parse_documentation(markdown: &str) -> Result<PricingData, GhLlmCostError
             }
             Event::End(TagEnd::TableRow) => {
                 in_table_row = false;
-                if !current_row.is_empty()
+                if in_model_table
+                    && !current_row.is_empty()
                     && let Some(entry) = build_entry(&current_provider, &current_row, &header_map)?
                 {
                     entries.push(entry);
@@ -125,6 +137,14 @@ fn normalize_header(header: &str) -> String {
         .to_lowercase()
         .replace(' ', "_")
         .replace(['(', ')'], "")
+}
+
+/// LLM pricing tables expose per-model text prices. Other tables (image
+/// generation, code review estimates, ...) use different columns and are skipped.
+fn is_model_table(header_map: &HashMap<String, usize>) -> bool {
+    ["model", "input", "output"]
+        .iter()
+        .all(|name| header_map.contains_key(*name))
 }
 
 fn build_entry(
@@ -177,11 +197,18 @@ fn build_entry(
         "N/A".to_owned()
     };
 
+    // Some providers (e.g. Google, Microsoft) do not have a category column.
+    let category = if header_map.contains_key("category") {
+        get("category")?
+    } else {
+        "N/A".to_owned()
+    };
+
     let entry = LlmCostEntry {
         provider,
         model: get("model")?,
         release_status: ReleaseStatus::try_from(get("release_status")?.as_str())?,
-        category: get("category")?,
+        category,
         tier,
         threshold,
         input: Price::parse(&get("input")?)?,
@@ -233,6 +260,44 @@ mod tests {
             .ok_or_else(|| GhLlmCostError::Parse("Moonshot AI entry not found".to_owned()))?;
         assert_eq!(moonshot.model, "Kimi K2.7 Code");
         assert_eq!(moonshot.tier, Tier::NotApplicable);
+        Ok(())
+    }
+
+    #[test]
+    fn parses_new_page_structure() -> Result<(), GhLlmCostError> {
+        const PAGE: &str = r#"
+## Pricing tables
+
+### Google
+
+| Model                                 | Release status | Category  | Tier    | Threshold (input tokens) | Input | Cached input | Output |
+| ------------------------------------- | -------------- | --------- | ------- | ------------------------ | ----: | -----------: | -----: |
+| Gemini 3.8 Flash[^gemini-flash-promo] | GA             | Versatile | Default | Not applicable           | $0.75 |       $0.075 |  $3.75 |
+
+### Image generation models
+
+| Model               | Release status | Text input | Cached text input | Image input | Cached image input | Image output |
+| ------------------- | -------------- | ---------: | ----------------: | ----------: | -----------------: | -----------: |
+| GPT Image 2.5 Flare | Public preview |      $5.00 |             $1.25 |       $8.00 |              $2.00 |       $30.00 |
+
+## Pricing and usage cost considerations
+
+| Review effort level | Typical range per review | Approximate average per review |
+| ------------------- | ------------------------ | ------------------------------ |
+| Lite                | $0.05 USD to $1 USD      | $0.25 USD                      |
+
+[^gemini-flash-promo]: Promotional pricing until December 31, 2026.
+"#;
+        let data = parse_documentation(PAGE)?;
+        assert_eq!(data.len(), 1);
+        let gemini = data
+            .entries
+            .first()
+            .ok_or_else(|| GhLlmCostError::Parse("Gemini entry not found".to_owned()))?;
+        assert_eq!(gemini.model, "Gemini 3.8 Flash");
+        assert_eq!(gemini.provider, "Google");
+        assert_eq!(gemini.category, "Versatile");
+        assert!((gemini.cached_input.as_f64().unwrap_or(f64::NAN) - 0.075).abs() < f64::EPSILON);
         Ok(())
     }
 

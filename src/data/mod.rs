@@ -161,13 +161,26 @@ impl Price {
         match self.0 {
             None => "N/A".to_owned(),
             Some(v) => {
-                let formatted = format!("{v:.2}");
+                let formatted = format_amount(v);
                 match separator {
                     DecimalSeparator::Dot => format!("${formatted}"),
                     DecimalSeparator::Comma => format!("${}", formatted.replace('.', ",")),
                 }
             }
         }
+    }
+}
+
+/// Formats an amount with at least 2 decimals, keeping a 3rd decimal when present
+/// (e.g. `0.175` stays `0.175`, `0.1` becomes `0.10`, `2` becomes `2.00`).
+fn format_amount(value: f64) -> String {
+    let three = format!("{value:.3}");
+    let trimmed = three.trim_end_matches('0');
+    let decimals = trimmed.split_once('.').map_or(0, |(_, d)| d.len());
+    if decimals < 2 {
+        format!("{value:.2}")
+    } else {
+        trimmed.to_owned()
     }
 }
 
@@ -312,6 +325,15 @@ mod tests {
         let na = Price::parse("Not applicable")?;
         assert_eq!(na.display_with(DecimalSeparator::Dot), "N/A");
         assert_eq!(na.display_with(DecimalSeparator::Comma), "N/A");
+        Ok(())
+    }
+
+    #[test]
+    fn price_display_keeps_third_decimal() -> Result<(), GhLlmCostError> {
+        assert_eq!(Price::parse("$0.175")?.display(), "$0.175");
+        assert_eq!(Price::parse("$0.125")?.display(), "$0.125");
+        assert_eq!(Price::parse("$0.1")?.display(), "$0.10");
+        assert_eq!(Price::parse("$2")?.display(), "$2.00");
         Ok(())
     }
 }

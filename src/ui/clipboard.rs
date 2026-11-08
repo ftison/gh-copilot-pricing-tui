@@ -110,7 +110,7 @@ mod tests {
         let cells: Vec<&str> = row.split('\t').collect();
 
         assert_eq!(cells[6], "0.25");
-        assert_eq!(cells[7], "0.03");
+        assert_eq!(cells[7], "0.025");
         assert_eq!(cells[8], "N/A");
         assert_eq!(cells[9], "2.00");
         Ok(())
@@ -124,7 +124,7 @@ mod tests {
         let cells: Vec<&str> = row.split('\t').collect();
 
         assert_eq!(cells[6], "0,25");
-        assert_eq!(cells[7], "0,03");
+        assert_eq!(cells[7], "0,025");
         assert_eq!(cells[8], "N/A");
         assert_eq!(cells[9], "2,00");
         Ok(())
